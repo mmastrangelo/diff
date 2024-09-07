@@ -207,6 +207,10 @@ func (d *Differ) getDiffType(a, b reflect.Value) (DiffType, DiffFunc) {
 	case are(a, b, reflect.Ptr, reflect.Invalid):
 		return PTR, d.diffPtr
 	case are(a, b, reflect.Interface, reflect.Invalid):
+		if a.Elem().Kind() == reflect.Map && b.Elem().Kind() == reflect.Map {
+			return MAP, d.diffMap
+		}
+
 		return INTERFACE, d.diffInterface
 	default:
 		return UNSUPPORTED, nil
