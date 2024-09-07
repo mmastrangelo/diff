@@ -18,12 +18,27 @@ func (d *Differ) diffComparative(path []string, c *ComparativeList, parent inter
 		fpath := copyAppend(path, id)
 		nv := reflect.ValueOf(nil)
 
-		if c.m[k].A == nil {
-			c.m[k].A = &nv
+		parentIsMap := false
+		if _, ok := parent.(map[string]interface{}); ok {
+			parentIsMap = true
 		}
 
-		if c.m[k].B == nil {
-			c.m[k].B = &nv
+		if parentIsMap && c.m[k].A == nil && c.m[k].B != nil {
+			// set A to the zero value of B's type
+			c.m[k].A = new(reflect.Value)
+			*c.m[k].A = reflect.Zero(c.m[k].B.Type())
+		} else if parentIsMap && c.m[k].B == nil && c.m[k].A != nil {
+			// set B to the zero value of A's type
+			c.m[k].B = new(reflect.Value)
+			*c.m[k].B = reflect.Zero(c.m[k].A.Type())
+		} else {
+			if c.m[k].A == nil {
+				c.m[k].A = &nv
+			}
+
+			if c.m[k].B == nil {
+				c.m[k].B = &nv
+			}
 		}
 
 		err := d.diff(fpath, *c.m[k].A, *c.m[k].B, parent)
